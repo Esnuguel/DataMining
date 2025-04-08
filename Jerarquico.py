@@ -1,48 +1,50 @@
-import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import normalize
+import scipy.cluster.hierarchy as shc
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics import pairwise_distances
 
-# Lectura de datos
 
-df = pd.read_csv("Datos/ethylene_CO.txt", delim_whitespace=True, header=None) #Lee el txt y lo convierte a cvs
-# Cambia el nombre de las columnas
+df = pd.read_csv("Datos/ethylene_CO.txt", delim_whitespace=True,header=None)
 columnas = ["Tiempo (s)", "CO (ppm)", "Etileno (ppm)"] + [f"Sensor {i+1}" for i in range(16)]
 df.columns = columnas
-#Elimar las columnas indicadas por la profa :v
 df = df.drop(columns=["Tiempo (s)", "CO (ppm)", "Etileno (ppm)"])
-#No es necesario solo lo convierte a cvs de manera externa
-#df.to_csv("archivo_convertido.csv", index=False)
-print(df.head()) #Imprime las primeras 5 filas del dataframe para verificar que se haya leído correctamente
+print(df.head())
+#print(df.shape)
 
-# Algoritmo de agrupamiento jerárquico
-df_sample = df.sample(n=10500) # Toma una muestra aleatoria de 10500 filas del dataframe original
-Z = linkage(df_sample, method='ward') # Realiza el agrupamiento jerárquico utilizando el método de Ward
-np.set_printoptions(threshold=np.inf)  # Esto hará que se imprima toda la matriz
-print(Z)
-# Dendrograma completo
-plt.figure(figsize=(10, 7)) #Tamaño de la interfaz
-dendrogram(Z)
-plt.title("Dendrograma de agrupamiento jerárquico completo")
-plt.xlabel("Índice de muestra")
-plt.ylabel("Distancia o disimilitud")
+df_sample = df.head(10500) #Toa las primeras 10,500 filas
+#df_sample = df.sample(n=10500) #Toma una muestra aleatoria de 10,500 filas del dataframe original
+
+# Normalizar los datos
+normalized_data = normalize(df_sample) # Normaliza los datos a lo largo de las columnas
+df_normalized = pd.DataFrame(normalized_data, columns=[f"Sensor {i+1}" for i in range(16)]) # Crea un nuevo DataFrame con los datos normalizados
+print(df_normalized.head())
+
+#Calculo de las distancias entre puntos
+distances = pairwise_distances(normalized_data, metric='euclidean')
+distance_df = pd.DataFrame(distances)
+print("Matriz de distancias euclidianas entre los puntos:")
+print(distance_df)
+
+#Creacion del dendrograma
+plt.figure(figsize=(10, 7))  
+plt.title("Dendrograms")  
+dend = shc.dendrogram(shc.linkage(df_normalized, method='ward'))
+plt.axhline(y=30, color='r', linestyle='--')
+plt.axhline(y=20, color='g', linestyle='--')
+plt.axhline(y=12, color='b', linestyle='--')
 plt.show()
 
-#Dendrograma recortado
-clusters = fcluster(Z, t=3, criterion='maxclust')
-plt.figure(figsize=(10, 7))
-dendrogram(Z)
-plt.title("Dendrograma de agrupamiento jerárquico")
-plt.xlabel("Índice de muestra")
-plt.ylabel("Distancia o disimilitud")
-plt.show()
-
-
-"""
-Nomneclatura de los datos:
-[9.65900000e+03 1.04160000e+04 1.34046037e+01 2.00000000e+00]
-9.65900000e+03 = El primer índice de los registros que se están combinando
-1.04160000e+04 = El segundo índice de los registros que se están combinando
-1.34046037e+01 = La distancia entre los registros que se están combinando
-2.00000000e+00 = El número de elementos en el nuevo cluster combinado
-"""
+#Agrupamiento de clusteres
+np.set_printoptions(threshold=np.inf)  # Mostrar todo el array sin recortes
+cluster1 = AgglomerativeClustering(n_clusters=4, metric='euclidean', linkage='ward')
+cluster2 = AgglomerativeClustering(n_clusters=3, metric='euclidean', linkage='ward')
+cluster3 = AgglomerativeClustering(n_clusters=2, metric='euclidean', linkage='ward')
+labels1 = cluster1.fit_predict(df_normalized)
+labels2 = cluster2.fit_predict(df_normalized)
+labels3 = cluster3.fit_predict(df_normalized)
+print("Partición con 4 grupos \n",labels1)
+print("Partición con 3 grupos \n",labels2)
+print("Partición con 2 grupos \n",labels3) 
