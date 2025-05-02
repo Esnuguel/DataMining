@@ -26,8 +26,7 @@ def dunn_index(X, labels):
     return min_inter / max_intra
 
 # 1) Cargar y preparar datos
-df = pd.read_csv("Datos/datos_combinados_formato_final.txt",
-                 delim_whitespace=True, header=None)
+df = pd.read_csv("Datos/datos_combinados_formato_final.txt",delim_whitespace=True, header=None)
 columnas = ["Tiempo (s)", "CO (ppm)", "Etileno (ppm)"] + [f"Sensor {i+1}" for i in range(16)]
 df.columns = columnas
 
