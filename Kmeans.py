@@ -13,7 +13,7 @@ def dunn_index(X, labels):
     intra_dists = [np.max(cdist(c, c)) for c in clusters if len(c) > 1]
     max_intra = np.max(intra_dists) if intra_dists else 0
     inter_dists = [np.min(cdist(clusters[i], clusters[j]))
-                   for i in range(len(clusters)) for j in range(i + 1, len(clusters))]
+                for i in range(len(clusters)) for j in range(i + 1, len(clusters))]
     min_inter = np.min(inter_dists) if inter_dists else 0
     return np.inf if max_intra == 0 else min_inter / max_intra
 
