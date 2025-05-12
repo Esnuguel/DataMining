@@ -6,6 +6,9 @@ from scipy.spatial.distance import cdist
 from sklearn.naive_bayes import GaussianNB
 from collections import Counter
 from sklearn.model_selection import train_test_split
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # === Funciones auxiliares ===
 
@@ -50,7 +53,7 @@ columnas = ["Tiempo (s)", "CO (ppm)", "Etileno (ppm)"] + [f"Sensor {i+1}" for i 
 df.columns = columnas
 X = df.drop(columns=["Tiempo (s)", "CO (ppm)", "Etileno (ppm)"]).to_numpy()
 
-# === Paso 2: Evaluar KMeans con métricas ===
+# === Paso 2: Evaluar KMeans con métricas y graficar con t-SNE en 3D ===
 
 range_k = [2, 3, 4]
 for k in range_k:
@@ -68,6 +71,22 @@ for k in range_k:
     print("N° de puntos por cluster:")
     for cl, cnt in conteo.items():
         print(f"  • Cluster {cl}: {cnt}")
+
+    # === Visualización 3D con t-SNE ===
+    tsne = TSNE(n_components=3, random_state=42, perplexity=30, n_iter=1000)
+    X_tsne = tsne.fit_transform(X)
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    scatter = ax.scatter(X_tsne[:, 0], X_tsne[:, 1], X_tsne[:, 2],
+                         c=labels, cmap='tab10', s=15)
+    ax.set_title(f'Clusters KMeans con t-SNE (k={k})')
+    ax.set_xlabel('t-SNE 1')
+    ax.set_ylabel('t-SNE 2')
+    ax.set_zlabel('t-SNE 3')
+    fig.colorbar(scatter, ax=ax, label='Cluster')
+    plt.tight_layout()
+    plt.show()
 
 # === Paso 3: Aplicar Bayes y RNA usando el 20% de datos etiquetados por KMeans ===
 
